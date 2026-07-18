@@ -5,13 +5,17 @@ export const PACK_SCHEMA_VERSION = 'soroe.pack/v1'
 export const DIAGNOSTICS_SCHEMA_VERSION = 'soroe.diagnostics/v1'
 export const VERIFICATION_SCHEMA_VERSION = 'soroe.verification/v1'
 
-export const OUTPUT_FILES = [
+export const DESIGN_OUTPUT_FILES = [
   'facet-pack.json',
   'REFERENCE_GRAPH.md',
-  'IMPLEMENTATION_BRIEF.md',
-  'verification.plan.json',
+  'DESIGN_BRIEF.md',
   'tokens.css',
 ]
+
+export const BUILD_OUTPUT_FILES = ['IMPLEMENTATION_BRIEF.md', 'verification.plan.json']
+
+// Legacy alias for the single-phase compiler.
+export const OUTPUT_FILES = [...DESIGN_OUTPUT_FILES, ...BUILD_OUTPUT_FILES]
 
 export const CATEGORIES = new Set([
   'identity',

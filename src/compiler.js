@@ -5,6 +5,8 @@ import { canonicalJson, digest, normalizeRecipe } from './canonical.js'
 import {
   COMPILER_NAME,
   COMPILER_VERSION,
+  DESIGN_OUTPUT_FILES,
+  BUILD_OUTPUT_FILES,
   OUTPUT_FILES,
   PACK_SCHEMA_VERSION,
   VERIFICATION_SCHEMA_VERSION,
@@ -168,11 +170,11 @@ function renderGraphMarkdown(pack) {
   return lines.join('\n')
 }
 
-function renderImplementationBrief(pack) {
+function renderDesignBrief(pack) {
   const references = new Map(pack.references.map((reference) => [reference.id, reference]))
   const facets = new Map(pack.facets.map((facet) => [facet.id, facet]))
   const lines = [
-    `# ${pack.recipe.project.title} — implementation brief`,
+    `# ${pack.recipe.project.title} — design brief`,
     '',
     pack.recipe.project.intent,
     '',
@@ -260,6 +262,38 @@ function renderImplementationBrief(pack) {
   return `${lines.join('\n').trimEnd()}\n`
 }
 
+function renderImplementationBrief(pack) {
+  const lines = [
+    `# ${pack.recipe.project.title} — implementation brief`,
+    '',
+    pack.recipe.project.intent,
+    '',
+    `Recipe digest: \`${pack.recipe.digest}\``,
+    '',
+    '## Implementation targets',
+    '',
+  ]
+
+  const targets = new Set()
+  for (const facet of pack.facets) {
+    for (const target of facet.implementation.targets) {
+      targets.add(target)
+    }
+  }
+  for (const target of [...targets].sort()) {
+    lines.push(`- \`${target}\``)
+  }
+
+  lines.push('', '## Verification plan', '')
+  for (const check of pack.verification.checks) {
+    lines.push(`- \`${check.id}\` [${check.method}] ${check.subject} — ${check.expectation}`)
+  }
+
+  lines.push('', '## Guardrails', '', ...pack.guardrails.map((rule) => `- ${rule}`), '')
+
+  return `${lines.join('\n').trimEnd()}\n`
+}
+
 function renderTokens(tokens) {
   const entries = Object.entries(tokens)
   if (entries.length === 0) return '/* Soroe recipe declares no CSS tokens. */\n'
@@ -294,6 +328,7 @@ export function compileRecipe(recipe) {
   const outputs = {
     'facet-pack.json': canonicalJson(pack),
     'REFERENCE_GRAPH.md': renderGraphMarkdown(pack),
+    'DESIGN_BRIEF.md': renderDesignBrief(pack),
     'IMPLEMENTATION_BRIEF.md': renderImplementationBrief(pack),
     'verification.plan.json': canonicalJson(verification),
     'tokens.css': renderTokens(normalized.tokens),
@@ -302,16 +337,33 @@ export function compileRecipe(recipe) {
   return { pack, outputs }
 }
 
-export async function writeOutputs(directory, outputs) {
+export function designRecipe(recipe) {
+  const { pack, outputs } = compileRecipe(recipe)
+  const designOutputs = {}
+  for (const filename of DESIGN_OUTPUT_FILES) {
+    designOutputs[filename] = outputs[filename]
+  }
+  return { pack, outputs: designOutputs }
+}
+
+export function buildPack(pack) {
+  const outputs = {
+    'IMPLEMENTATION_BRIEF.md': renderImplementationBrief(pack),
+    'verification.plan.json': canonicalJson(pack.verification ?? { schemaVersion: VERIFICATION_SCHEMA_VERSION, checks: [] }),
+  }
+  return { pack, outputs }
+}
+
+export async function writeOutputs(directory, outputs, fileList = OUTPUT_FILES) {
   await mkdir(directory, { recursive: true })
   await Promise.all(
-    OUTPUT_FILES.map((filename) => writeFile(join(directory, filename), outputs[filename], 'utf8')),
+    fileList.map((filename) => writeFile(join(directory, filename), outputs[filename], 'utf8')),
   )
 }
 
-export async function checkOutputs(directory, outputs) {
+export async function checkOutputs(directory, outputs, fileList = OUTPUT_FILES) {
   const stale = []
-  for (const filename of OUTPUT_FILES) {
+  for (const filename of fileList) {
     try {
       const actual = await readFile(join(directory, filename), 'utf8')
       if (actual !== outputs[filename]) stale.push({ file: filename, reason: 'content differs' })

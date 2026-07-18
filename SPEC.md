@@ -76,7 +76,7 @@ Emits:
 ## CLI
 
 ```text
-soroe design <recipe.json> --out <directory> [--format text|json]
+soroe design <recipe.json> --out <directory> [--check] [--format text|json]
 soroe build <facet-pack.json> --skill <skill-dir> --out <directory> [--format text|json]
 soroe verify <site-dir> --plan <verification.plan.json> [--format text|json]
 
@@ -84,6 +84,8 @@ soroe verify <site-dir> --plan <verification.plan.json> [--format text|json]
 soroe validate <recipe.json> [--format text|json]
 soroe compile <recipe.json> --out <directory> [--check] [--format text|json]
 ```
+
+`soroe compile` is the legacy single-phase alias that emits both design and build artifacts.
 
 Exit codes:
 
@@ -135,6 +137,8 @@ Build phase writes exactly these owned artifacts:
 - `IMPLEMENTATION_BRIEF.md`;
 - `verification.plan.json`;
 - optional skill-scaffolded implementation targets.
+
+`compile` (legacy single-phase alias) writes all of the above.
 
 Existing unrelated files in the output directory are never removed.
 

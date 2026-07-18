@@ -1,84 +1,119 @@
 # Soroe
 
-Soroe (揃え) is a design compiler. It turns visual references into a structured design system, then turns that design system into a deterministic implementation contract an AI agent can build and verify.
+> Design by reference. Build with traceability.
 
-It is built in two phases:
+Soroe (揃え) is a design compiler for teams who want to say “make it like these sites, but ours.”
 
-1. **Soroe Design** — select exact facets from references and compile them into a traceable design system: a Facet Pack, Reference Graph, design brief, visual tokens, and an machine-readable asset manifest.
-2. **Soroe Build** — take that design system, combine it with a frontend skill set, and emit implementation targets and a verification plan that a coding agent can use to produce the site.
+It turns visual references into a structured, shareable design system, then compiles that design system into a deterministic implementation contract that AI coding agents can build and verify.
 
 ```bash
-node ./bin/soroe.js design ./examples/observatory.recipe.json --out ./build/observatory
-node ./bin/soroe.js build ./build/observatory/facet-pack.json --skill ./skills/web-static --out ./build/observatory/site
-node ./bin/soroe.js verify ./build/observatory/site --plan ./build/observatory/verification.plan.json
+# Phase 1 — turn references into a design system
+soroe design ./recipe.json --out ./design
+
+# Phase 2 — turn the design system into an implementation contract
+soroe build ./design/facet-pack.json --out ./build
+
+# Phase 3 — verify the built site against the plan
+soroe verify ./site --plan ./build/verification.plan.json
 ```
 
-Both phases are offline and have no runtime dependencies.
+Both phases are offline, deterministic, and have no runtime dependencies.
 
-## Phase 1: Soroe Design
+## Why Soroe?
 
-Designers and agents use Soroe Design when they want to say "make it like these sites, but ours."
+Most handoffs from designer to developer (or from human to AI agent) lose the original intent in prose. “Make it like Stripe, but friendlier” is not actionable. Soroe replaces that ambiguity with:
 
-Input:
+- **References** — the actual sites you are learning from.
+- **Evidence** — what you noticed and where.
+- **Facets** — the exact properties you want to keep, with adaptation and anti-copy rules.
+- **Traceability** — every decision maps back to a source, and every output can be verified.
 
-- one or more visual references with stable URLs;
-- evidence (what you noticed at a route, viewport, or state);
-- selected facets (the exact property or pattern you want);
-- adaptation rules and anti-copy guardrails.
+## Two-phase workflow
 
-Output:
+### Phase 1: Soroe Design
 
-- `facet-pack.json` — canonical machine-readable design system;
-- `REFERENCE_GRAPH.md` — reviewable trace from reference → evidence → facet → target;
-- `DESIGN_BRIEF.md` — designer-facing rationale and constraints;
-- `tokens.css` — deterministic `:root` custom properties;
-- `assets/` — extracted or referenced asset manifest (colors, type scales, grid definitions).
-
-## Phase 2: Soroe Build
-
-AI agents and developers use Soroe Build when they need an auditable, traceable contract from the design system to the code.
-
-Input:
-
-- the compiled Facet Pack;
-- a frontend skill set (e.g., static HTML/CSS/JS, React, Vue);
-- optional project-specific content.
-
-Output:
-
-- `IMPLEMENTATION_BRIEF.md` — route- and facet-oriented instructions;
-- `verification.plan.json` — flattened checks with source and target traceability;
-- optional scaffolded implementation targets.
-
-## CLI
+Input: a recipe with references, evidence, and facets.
 
 ```bash
-# Design phase
-soroe design <recipe.json> --out <directory>
+soroe design ./recipe.json --out ./design
+```
 
-# Build phase
-soroe build <facet-pack.json> --skill <skill-dir> --out <directory>
+Output:
 
-# Verification
-soroe verify <site-dir> --plan <verification.plan.json>
+- `facet-pack.json` — canonical machine-readable design system.
+- `REFERENCE_GRAPH.md` — reviewable trace from reference → evidence → facet → target.
+- `DESIGN_BRIEF.md` — designer-facing rationale and constraints.
+- `tokens.css` — deterministic `:root` custom properties.
 
-# Legacy validate/compile aliases still work for the implementation compiler
+### Phase 2: Soroe Build
+
+Input: the compiled Facet Pack plus a frontend skill set.
+
+```bash
+soroe build ./design/facet-pack.json --out ./build
+```
+
+Output:
+
+- `IMPLEMENTATION_BRIEF.md` — route- and facet-oriented instructions.
+- `verification.plan.json` — flattened checks with source and target traceability.
+
+### Phase 3: Verify
+
+```bash
+soroe verify ./site --plan ./build/verification.plan.json
+```
+
+Static checks run immediately. Browser-based checks (DOM, computed-style, interaction, screenshot) are reported as pending until a headless verifier resolves them.
+
+## Example recipe
+
+See [`examples/observatory.recipe.json`](./examples/observatory.recipe.json) for a complete example.
+
+```json
+{
+  "schemaVersion": "soroe.recipe/v1",
+  "project": { "id": "signal-observatory", "title": "Signal Observatory" },
+  "references": [
+    {
+      "id": "sharlee",
+      "title": "Sharlee",
+      "url": "https://itssharl.ee/",
+      "role": "Dual identity and spatial staging",
+      "evidence": [
+        {
+          "id": "dual-identity",
+          "locator": "/ at desktop, first viewport identity copy",
+          "observation": "Two consecutive statements introduce Charles Bruyerre and then the familiar name Sharlee before the role description."
+        }
+      ]
+    }
+  ],
+  "facets": [
+    {
+      "id": "identity.dual-name",
+      "category": "identity",
+      "source": { "referenceId": "sharlee", "evidenceId": "dual-identity" },
+      "selection": { "summary": "Formal name followed by chosen name and role" },
+      "adaptation": { "intent": "Present the legal and familiar identities as complementary." },
+      "guardrails": { "include": [...], "exclude": [...] },
+      "implementation": { "targets": ["home.identity"] },
+      "verification": [{ "id": "home.identity-order", "method": "dom", "subject": "...", "expectation": "..." }]
+    }
+  ],
+  "composition": [...],
+  "tokens": { "color-accent": "#b8ff6a", ... }
+}
+```
+
+## CLI reference
+
+```bash
+soroe design  <recipe.json> --out <directory> [--check]
+soroe build   <facet-pack.json> --out <directory>
+soroe verify  <site-dir> --plan <verification.plan.json>
 soroe validate <recipe.json> [--format text|json]
-soroe compile <recipe.json> --out <directory> [--check]
 ```
-
-## Recipe shape
-
-Each facet names:
-
-- the exact reference evidence it is grounded in;
-- the property or behavior being selected;
-- how it should be adapted for the new project;
-- what must and must not survive implementation;
-- logical implementation targets;
-- observable verification checks.
-
-[`SPEC.md`](./SPEC.md) contains the full product contract. The normative machine contract is [`schema/recipe.v1.schema.json`](./schema/recipe.v1.schema.json).
 
 ## Development
 

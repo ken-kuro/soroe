@@ -6,9 +6,9 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 import { canonicalJson } from '../src/canonical.js'
-import { checkOutputs, compileRecipe, writeOutputs } from '../src/compiler.js'
+import { buildPack, checkOutputs, compileRecipe, designRecipe, writeOutputs } from '../src/compiler.js'
 import { run } from '../src/cli.js'
-import { OUTPUT_FILES } from '../src/constants.js'
+import { DESIGN_OUTPUT_FILES, OUTPUT_FILES } from '../src/constants.js'
 import { validateRecipe } from '../src/validate.js'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -150,4 +150,35 @@ test('shipped schemas declare the implemented versions', async () => {
   const packSchema = await readJson('schema/facet-pack.v1.schema.json')
   assert.equal(recipeSchema.properties.schemaVersion.const, 'soroe.recipe/v1')
   assert.equal(packSchema.properties.schemaVersion.const, 'soroe.pack/v1')
+})
+
+test('design phase emits only design artifacts', async () => {
+  const recipe = await readJson('fixtures/valid/minimal.recipe.json')
+  const { outputs } = designRecipe(recipe)
+  assert.deepEqual(Object.keys(outputs).sort(), [...DESIGN_OUTPUT_FILES].sort())
+  assert.ok(outputs['DESIGN_BRIEF.md'].includes('design brief'))
+})
+
+test('build phase emits implementation brief and verification plan', async () => {
+  const recipe = await readJson('fixtures/valid/minimal.recipe.json')
+  const { pack } = compileRecipe(recipe)
+  const { outputs } = buildPack(pack)
+  assert.ok(outputs['IMPLEMENTATION_BRIEF.md'].includes('implementation brief'))
+  assert.ok(outputs['verification.plan.json'].includes('soroe.verification/v1'))
+})
+
+test('CLI design and build commands run end to end', async () => {
+  const designDir = await mkdtemp(join(tmpdir(), 'soroe-design-'))
+  const io = streams()
+  const code = await run(['design', join(root, 'examples/observatory.recipe.json'), '--out', designDir], io)
+  assert.equal(code, 0)
+  const pack = JSON.parse(await readFile(join(designDir, 'facet-pack.json'), 'utf8'))
+  assert.equal(pack.schemaVersion, 'soroe.pack/v1')
+
+  const buildDir = await mkdtemp(join(tmpdir(), 'soroe-build-'))
+  const io2 = streams()
+  const code2 = await run(['build', join(designDir, 'facet-pack.json'), '--out', buildDir], io2)
+  assert.equal(code2, 0)
+  const plan = JSON.parse(await readFile(join(buildDir, 'verification.plan.json'), 'utf8'))
+  assert.equal(plan.schemaVersion, 'soroe.verification/v1')
 })

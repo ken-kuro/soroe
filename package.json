@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "test": "node --test",
-    "check": "node --check ./bin/soroe.js && node --check ./src/*.js && node ./bin/soroe.js validate ./fixtures/valid/minimal.recipe.json && node ./bin/soroe.js compile ./examples/observatory.recipe.json --out ./build/observatory --check"
+    "check": "node --check ./bin/soroe.js && node --check ./src/*.js && node ./bin/soroe.js validate ./fixtures/valid/minimal.recipe.json && node ./bin/soroe.js design ./examples/observatory.recipe.json --out ./build/observatory-design && node ./bin/soroe.js build ./build/observatory-design/facet-pack.json --out ./build/observatory-build && node ./bin/soroe.js verify ./build/observatory-build --plan ./build/observatory-build/verification.plan.json"
   },
   "engines": {
     "node": ">=20"
