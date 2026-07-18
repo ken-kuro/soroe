@@ -7,17 +7,28 @@ Soroe (揃え) is a design compiler for teams who want to say “make it like th
 It turns visual references into a structured, shareable design system, then compiles that design system into a deterministic implementation contract that AI coding agents can build and verify.
 
 ```bash
-# Phase 1 — turn references into a design system
+# 0. Scaffold a recipe from references
+soroe init --id my-site --title "My Site" \
+  --references sharlee:https://itssharl.ee/,enscribe:https://enscribe.dev/ \
+  --out ./recipe.json
+
+# 1. Turn references into a design system
 soroe design ./recipe.json --out ./design
 
-# Phase 2 — turn the design system into an implementation contract
+# 2. Turn the design system into an implementation contract
 soroe build ./design/facet-pack.json --out ./build
 
-# Phase 3 — verify the built site against the plan
+# 3. Verify the built site against the plan
 soroe verify ./site --plan ./build/verification.plan.json
 ```
 
 Both phases are offline, deterministic, and have no runtime dependencies.
+
+## Who is Soroe for?
+
+- **Designers** who want to hand references to a coding agent and get a traceable design system back.
+- **Developers** who need an auditable contract from “make it like these sites” to real code.
+- **AI agents** (Claude, Codex, etc.) that need structured constraints and a verification plan.
 
 ## Why Soroe?
 
@@ -109,6 +120,7 @@ See [`examples/observatory.recipe.json`](./examples/observatory.recipe.json) for
 ## CLI reference
 
 ```bash
+soroe init    --id <project-id> --title <title> --references <id:url,...> --out <recipe.json>
 soroe design  <recipe.json> --out <directory> [--check]
 soroe build   <facet-pack.json> --out <directory>
 soroe verify  <site-dir> --plan <verification.plan.json>

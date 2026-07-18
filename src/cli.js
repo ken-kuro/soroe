@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 
 import { canonicalJson } from './canonical.js'
 import {
@@ -12,11 +12,155 @@ import { BUILD_OUTPUT_FILES, DESIGN_OUTPUT_FILES, OUTPUT_FILES } from './constan
 import { diagnostics, validateRecipe } from './validate.js'
 
 const USAGE = `Usage:
+  soroe init --id <project-id> --title <title> --references <id:url,...> --out <recipe.json>
   soroe design <recipe.json> --out <directory> [--check] [--format text|json]
-  soroe build <facet-pack.json> --skill <skill-dir> --out <directory> [--format text|json]
+  soroe build <facet-pack.json> --out <directory> [--format text|json]
   soroe verify <site-dir> --plan <verification.plan.json> [--format text|json]
   soroe validate <recipe.json> [--format text|json]
-  soroe compile <recipe.json> --out <directory> [--check] [--format text|json]`
+  soroe compile <recipe.json> --out <directory> [--check] [--format text|json]
+  soroe help`
+
+const HELP = `Soroe — design by reference, build with traceability.
+
+Commands:
+  init     scaffold a starter recipe from references
+  design   compile a recipe into a design system
+  build    compile a Facet Pack into an implementation contract
+  verify   verify a built site against a verification plan
+  validate validate a recipe against the schema
+  compile  legacy alias that emits both design and build artifacts
+  help     show this help message
+
+Quick start:
+  soroe init --id my-site --title "My Site" \\
+    --references a:https://a.com,b:https://b.com \\
+    --out ./recipe.json
+  soroe design ./recipe.json --out ./design
+  soroe build ./design/facet-pack.json --out ./build
+`
+
+function parseInitArguments(rest) {
+  let id
+  let title
+  const references = []
+  let out
+  let format = 'text'
+
+  for (let index = 0; index < rest.length; index += 1) {
+    const value = rest[index]
+    if (value === '--id') {
+      id = rest[index + 1]
+      index += 1
+    } else if (value === '--title') {
+      title = rest[index + 1]
+      index += 1
+    } else if (value === '--references') {
+      const raw = rest[index + 1]
+      index += 1
+      for (const entry of raw.split(',')) {
+        const separator = entry.indexOf(':')
+        if (separator === -1) return { error: `Invalid reference '${entry}'. Use id:url.` }
+        references.push({ id: entry.slice(0, separator), url: entry.slice(separator + 1) })
+      }
+    } else if (value === '--out') {
+      out = rest[index + 1]
+      index += 1
+    } else if (value === '--format') {
+      format = rest[index + 1]
+      index += 1
+    } else if (value.startsWith('-')) {
+      return { error: `Unknown option '${value}'.` }
+    }
+  }
+
+  if (!id) return { error: '`init` requires `--id <project-id>`.' }
+  if (!title) return { error: '`init` requires `--title <title>`.' }
+  if (references.length === 0) return { error: '`init` requires `--references id:url,id:url`.' }
+  if (!out) return { error: '`init` requires `--out <recipe.json>`.' }
+  if (!['text', 'json'].includes(format)) return { error: "Format must be 'text' or 'json'." }
+
+  return { id, title, references, out, format }
+}
+
+function generateRecipe({ id, title, references }) {
+  const referenceEntries = references.map((reference, index) => ({
+    id: reference.id,
+    title: `Reference ${index + 1}`,
+    url: reference.url,
+    role: 'Observed reference',
+    evidence: [
+      {
+        id: 'placeholder',
+        locator: 'Add route, viewport, and element you observed.',
+        observation: 'Replace with a factual observation about what you saw.',
+      },
+    ],
+  }))
+
+  const facetEntries = references.map((reference, index) => ({
+    id: `${reference.id}.placeholder`,
+    category: 'layout',
+    source: { referenceId: reference.id, evidenceId: 'placeholder' },
+    selection: {
+      summary: 'Replace with the exact property or pattern you want.',
+      properties: [{ name: 'example', value: 'Replace with a concrete, measurable property.' }],
+    },
+    adaptation: {
+      intent: 'Explain how this facet should be adapted for the target project.',
+      directives: ['Replace with implementation directives.'],
+    },
+    guardrails: {
+      include: ['State what must survive implementation.'],
+      exclude: ['State brands, assets, copy, or code that must not be copied.'],
+    },
+    implementation: {
+      targets: [`target.${index + 1}`],
+      hints: ['Map this facet to a logical implementation target.'],
+    },
+    verification: [
+      {
+        id: `${reference.id}.placeholder.check`,
+        method: 'manual',
+        subject: 'Replace with the element or surface to verify.',
+        expectation: 'Replace with an observable expectation.',
+      },
+    ],
+  }))
+
+  const compositionFacets = facetEntries.map((facet) => facet.id)
+
+  return {
+    $schema: 'https://soroe.dev/schema/recipe.v1.schema.json',
+    schemaVersion: 'soroe.recipe/v1',
+    project: {
+      id,
+      title,
+      intent: `A design system compiled from ${references.length} reference(s).`,
+      target: { kind: 'web-interface', root: '.', framework: 'static HTML, CSS, and JavaScript' },
+    },
+    references: referenceEntries,
+    facets: facetEntries,
+    composition: [
+      {
+        id: 'home',
+        route: '/',
+        purpose: 'Introduce the project and its primary surfaces.',
+        facets: compositionFacets,
+      },
+    ],
+    tokens: {
+      'color-accent': '#000000',
+      'color-canvas': '#ffffff',
+      'color-ink': '#000000',
+    },
+    guardrails: [
+      'All identity, copy, links, assets, and source code must belong to the target project.',
+      'Do not copy source prose, brands, code, models, textures, or media.',
+      'Keep core content and navigation usable without JavaScript.',
+      'Respect prefers-reduced-motion and visible keyboard focus.',
+    ],
+  }
+}
 
 function parseDesignArguments(rest) {
   let recipePath
@@ -287,8 +431,34 @@ async function runVerify(options, streams) {
   return 0
 }
 
+async function runInit(options, streams) {
+  const recipe = generateRecipe(options)
+  const text = canonicalJson(recipe)
+  await writeFile(options.out, text, 'utf8')
+  if (options.format === 'json') {
+    streams.stdout.write(canonicalJson({ schemaVersion: 'soroe.init/v1', out: options.out }))
+  } else {
+    streams.stdout.write(`Initialized recipe at '${options.out}'. Replace the placeholder evidence and facets before compiling.\n`)
+  }
+  return 0
+}
+
 export async function run(argv, streams = process) {
   const [command, ...rest] = argv
+
+  if (!command || command === 'help' || command === '--help' || command === '-h') {
+    streams.stdout.write(HELP)
+    return 0
+  }
+
+  if (command === 'init') {
+    const options = parseInitArguments(rest)
+    if (options.error) {
+      streams.stderr.write(`${options.error}\n\n${USAGE}\n`)
+      return 2
+    }
+    return runInit(options, streams)
+  }
 
   if (command === 'design' || command === 'compile') {
     const options = parseDesignArguments(rest)

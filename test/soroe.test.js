@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile, writeFile, mkdtemp } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, readFile, writeFile, mkdtemp } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
@@ -12,6 +11,8 @@ import { DESIGN_OUTPUT_FILES, OUTPUT_FILES } from '../src/constants.js'
 import { validateRecipe } from '../src/validate.js'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
+const tmpRoot = join(root, 'test', 'tmp')
+await mkdir(tmpRoot, { recursive: true })
 
 async function readJson(relativePath) {
   return JSON.parse(await readFile(join(root, relativePath), 'utf8'))
@@ -117,7 +118,7 @@ test('compiled JSON is canonical and ends with one newline', async () => {
 test('--check detects missing and modified compiler-owned outputs', async () => {
   const recipe = await readJson('examples/observatory.recipe.json')
   const { outputs } = compileRecipe(recipe)
-  const directory = await mkdtemp(join(tmpdir(), 'soroe-test-'))
+  const directory = await mkdtemp(join(tmpRoot, 'soroe-test-'))
 
   let stale = await checkOutputs(directory, outputs)
   assert.deepEqual(
@@ -167,15 +168,40 @@ test('build phase emits implementation brief and verification plan', async () =>
   assert.ok(outputs['verification.plan.json'].includes('soroe.verification/v1'))
 })
 
+test('CLI init scaffolds a valid recipe from references', async () => {
+  const out = join(tmpRoot, 'soroe-init-recipe.json')
+  const io = streams()
+  const code = await run(
+    ['init', '--id', 'my-site', '--title', 'My Site', '--references', 'a:https://a.com,b:https://b.com', '--out', out],
+    io,
+  )
+  assert.equal(code, 0)
+  const recipe = JSON.parse(await readFile(out, 'utf8'))
+  assert.equal(recipe.schemaVersion, 'soroe.recipe/v1')
+  assert.equal(recipe.references.length, 2)
+  assert.equal(recipe.facets.length, 2)
+  const validation = validateRecipe(recipe)
+  assert.equal(validation.valid, true)
+})
+
+test('CLI help prints usage and quick start', async () => {
+  const io = streams()
+  const code = await run(['help'], io)
+  const output = io.read()
+  assert.equal(code, 0)
+  assert.match(output.stdout, /Soroe/)
+  assert.match(output.stdout, /Commands:/)
+})
+
 test('CLI design and build commands run end to end', async () => {
-  const designDir = await mkdtemp(join(tmpdir(), 'soroe-design-'))
+  const designDir = await mkdtemp(join(tmpRoot, 'soroe-design-'))
   const io = streams()
   const code = await run(['design', join(root, 'examples/observatory.recipe.json'), '--out', designDir], io)
   assert.equal(code, 0)
   const pack = JSON.parse(await readFile(join(designDir, 'facet-pack.json'), 'utf8'))
   assert.equal(pack.schemaVersion, 'soroe.pack/v1')
 
-  const buildDir = await mkdtemp(join(tmpdir(), 'soroe-build-'))
+  const buildDir = await mkdtemp(join(tmpRoot, 'soroe-build-'))
   const io2 = streams()
   const code2 = await run(['build', join(designDir, 'facet-pack.json'), '--out', buildDir], io2)
   assert.equal(code2, 0)
