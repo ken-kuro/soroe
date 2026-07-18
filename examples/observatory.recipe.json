@@ -1,0 +1,239 @@
+{
+  "$schema": "https://soroe.dev/schema/recipe.v1.schema.json",
+  "schemaVersion": "soroe.recipe/v1",
+  "project": {
+    "id": "signal-observatory",
+    "title": "Signal Observatory",
+    "intent": "Create a fictional monitoring interface that combines a legible identity, keyboard-first control, and a responsive card composition.",
+    "target": {
+      "kind": "web-interface",
+      "root": ".",
+      "framework": "framework-neutral"
+    }
+  },
+  "references": [
+    {
+      "id": "reference-identity",
+      "title": "Identity study",
+      "url": "https://example.com/identity-study",
+      "role": "Layered introduction",
+      "evidence": [
+        {
+          "id": "intro",
+          "locator": "/ at desktop, hero copy",
+          "observation": "Two short statements distinguish the formal system name from its familiar call sign."
+        }
+      ]
+    },
+    {
+      "id": "reference-terminal",
+      "title": "Terminal study",
+      "url": "https://example.com/terminal-study",
+      "role": "Keyboard interaction",
+      "evidence": [
+        {
+          "id": "prompt",
+          "locator": "/ at desktop, command prompt",
+          "observation": "A persistent prompt accepts terse commands and prints explicit success or error feedback."
+        }
+      ]
+    },
+    {
+      "id": "reference-grid",
+      "title": "Bento study",
+      "url": "https://example.com/bento-study",
+      "role": "Responsive composition",
+      "evidence": [
+        {
+          "id": "cards",
+          "locator": "/ at 1440px and 390px, main card region",
+          "observation": "Named grid areas change across breakpoints while semantic card order remains stable."
+        }
+      ]
+    }
+  ],
+  "facets": [
+    {
+      "id": "identity.call-sign",
+      "category": "identity",
+      "source": {
+        "referenceId": "reference-identity",
+        "evidenceId": "intro"
+      },
+      "selection": {
+        "summary": "Formal name followed by a familiar call sign",
+        "properties": [
+          {
+            "name": "copy-sequence",
+            "value": "formal identity → familiar identity → role"
+          }
+        ]
+      },
+      "adaptation": {
+        "intent": "Give the fictional tool a technical name and a human shorthand without ambiguity.",
+        "directives": [
+          "Keep both names visible in the first viewport.",
+          "Use original product copy."
+        ]
+      },
+      "guardrails": {
+        "include": [
+          "A clear relationship between formal and familiar names."
+        ],
+        "exclude": [
+          "Reference names, wording, typography, and 3D assets."
+        ]
+      },
+      "implementation": {
+        "targets": [
+          "hero.identity"
+        ],
+        "hints": [
+          "Use two related heading lines and a concise role statement."
+        ]
+      },
+      "verification": [
+        {
+          "id": "hero.identity-sequence",
+          "method": "dom",
+          "subject": "hero.identity",
+          "expectation": "Formal name, call sign, and role appear in that DOM order."
+        }
+      ]
+    },
+    {
+      "id": "interaction.command-prompt",
+      "category": "interaction",
+      "source": {
+        "referenceId": "reference-terminal",
+        "evidenceId": "prompt"
+      },
+      "selection": {
+        "summary": "Keyboard-first command prompt with visible feedback",
+        "properties": [
+          {
+            "name": "input-model",
+            "value": "command → output → retained history"
+          },
+          {
+            "name": "status-language",
+            "value": "explicit success and unknown-command states"
+          }
+        ]
+      },
+      "adaptation": {
+        "intent": "Let visitors jump between observatory panels without hiding ordinary links.",
+        "directives": [
+          "Support help and panel-navigation commands.",
+          "Keep semantic links as the non-script fallback."
+        ]
+      },
+      "guardrails": {
+        "include": [
+          "Keyboard focus visibility.",
+          "Unknown-command feedback."
+        ],
+        "exclude": [
+          "Decorative terminal text that implies commands work when they do not."
+        ]
+      },
+      "implementation": {
+        "targets": [
+          "navigation.prompt"
+        ],
+        "hints": [
+          "Use a form, input label, output live region, and bounded history."
+        ]
+      },
+      "verification": [
+        {
+          "id": "navigation.prompt-help",
+          "method": "interaction",
+          "subject": "navigation.prompt",
+          "expectation": "Entering help lists the supported commands in a live region."
+        }
+      ]
+    },
+    {
+      "id": "layout.named-bento",
+      "category": "layout",
+      "source": {
+        "referenceId": "reference-grid",
+        "evidenceId": "cards"
+      },
+      "selection": {
+        "summary": "Named responsive grid areas with varied card spans",
+        "properties": [
+          {
+            "name": "desktop-grid",
+            "value": "four columns with wide, tall, and square regions"
+          },
+          {
+            "name": "mobile-grid",
+            "value": "one column preserving semantic order"
+          }
+        ]
+      },
+      "adaptation": {
+        "intent": "Make monitoring panels scannable while keeping the primary signal dominant.",
+        "directives": [
+          "Assign semantic names to grid areas.",
+          "Collapse without horizontal scrolling."
+        ]
+      },
+      "guardrails": {
+        "include": [
+          "At least three distinct card proportions."
+        ],
+        "exclude": [
+          "The reference's exact grid map, content, and illustrations."
+        ]
+      },
+      "implementation": {
+        "targets": [
+          "home.bento"
+        ],
+        "hints": [
+          "Use CSS grid-template-areas at explicit breakpoints."
+        ]
+      },
+      "verification": [
+        {
+          "id": "home.bento-responsive",
+          "method": "computed-style",
+          "subject": "home.bento",
+          "expectation": "The grid has four columns at 1280px and one column at 390px."
+        }
+      ]
+    }
+  ],
+  "composition": [
+    {
+      "id": "home",
+      "route": "/",
+      "purpose": "Introduce and control the fictional observatory from one responsive surface.",
+      "facets": [
+        "identity.call-sign",
+        "interaction.command-prompt",
+        "layout.named-bento"
+      ],
+      "decisions": [
+        {
+          "summary": "Terminal density versus identity clarity",
+          "resolution": "Keep the hero spacious; confine dense command output to one bento card."
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "color-accent": "#a6ffcb",
+    "color-canvas": "#0b1110",
+    "color-ink": "#ecfff4",
+    "radius-card": "1.25rem"
+  },
+  "guardrails": [
+    "Do not copy source prose, brands, code, or assets.",
+    "Preserve semantic navigation without JavaScript.",
+    "Respect reduced-motion preferences."
+  ]
+}

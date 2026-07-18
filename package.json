@@ -1,0 +1,33 @@
+{
+  "name": "soroe",
+  "version": "0.1.0",
+  "description": "A design compiler: from visual references to a design system, then to an implementation contract an AI agent can build and verify.",
+  "type": "module",
+  "bin": {
+    "soroe": "./bin/soroe.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schema",
+    "skills",
+    "README.md",
+    "SPEC.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check ./bin/soroe.js && node --check ./src/*.js && node ./bin/soroe.js validate ./fixtures/valid/minimal.recipe.json && node ./bin/soroe.js compile ./examples/observatory.recipe.json --out ./build/observatory --check"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "coding-agents",
+    "design-references",
+    "design-system",
+    "interface",
+    "traceability"
+  ],
+  "license": "MIT"
+}

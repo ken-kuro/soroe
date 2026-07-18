@@ -1,0 +1,446 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soroe.dev/schema/recipe.v1.schema.json",
+  "title": "Soroe recipe v1",
+  "description": "A grounded selection of visual-reference facets to compile into an implementation contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "project",
+    "references",
+    "facets",
+    "composition",
+    "guardrails"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schemaVersion": {
+      "const": "soroe.recipe/v1"
+    },
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "facets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/facet"
+      }
+    },
+    "composition": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/composition"
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^;{}\\r\\n]+$"
+      }
+    },
+    "guardrails": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stringSet": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "intent",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "intent": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "root"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "web-interface",
+                "native-interface",
+                "design-system",
+                "prototype"
+              ]
+            },
+            "root": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "framework": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "url",
+        "role",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "role": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "locator",
+              "observation"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "locator": {
+                "$ref": "#/$defs/nonEmptyString"
+              },
+              "observation": {
+                "$ref": "#/$defs/nonEmptyString"
+              }
+            }
+          }
+        }
+      }
+    },
+    "facet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "source",
+        "selection",
+        "adaptation",
+        "guardrails",
+        "implementation",
+        "verification"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "category": {
+          "enum": [
+            "identity",
+            "layout",
+            "interaction",
+            "typography",
+            "color",
+            "motion",
+            "imagery",
+            "content"
+          ]
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "referenceId",
+            "evidenceId"
+          ],
+          "properties": {
+            "referenceId": {
+              "$ref": "#/$defs/id"
+            },
+            "evidenceId": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "properties"
+          ],
+          "properties": {
+            "summary": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "properties": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "properties": {
+                  "name": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "value": {
+                    "$ref": "#/$defs/nonEmptyString"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "adaptation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "intent",
+            "directives"
+          ],
+          "properties": {
+            "intent": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "directives": {
+              "$ref": "#/$defs/stringSet"
+            }
+          }
+        },
+        "guardrails": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "include",
+            "exclude"
+          ],
+          "properties": {
+            "include": {
+              "$ref": "#/$defs/stringSet"
+            },
+            "exclude": {
+              "$ref": "#/$defs/stringSet"
+            }
+          }
+        },
+        "implementation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "targets",
+            "hints"
+          ],
+          "properties": {
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "hints": {
+              "$ref": "#/$defs/stringSet"
+            }
+          }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "method",
+              "subject",
+              "expectation"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "method": {
+                "enum": [
+                  "dom",
+                  "computed-style",
+                  "interaction",
+                  "screenshot",
+                  "manual"
+                ]
+              },
+              "subject": {
+                "$ref": "#/$defs/nonEmptyString"
+              },
+              "expectation": {
+                "$ref": "#/$defs/nonEmptyString"
+              },
+              "viewport": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "width",
+                  "height"
+                ],
+                "properties": {
+                  "width": {
+                    "type": "integer",
+                    "minimum": 240
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 240
+                  }
+                }
+              },
+              "preferences": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "reducedMotion": {
+                    "type": "boolean"
+                  },
+                  "colorScheme": {
+                    "enum": [
+                      "light",
+                      "dark"
+                    ]
+                  }
+                }
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "method": {
+                      "const": "screenshot"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "viewport"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "route",
+        "purpose",
+        "facets"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "route": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "purpose": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "facets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "summary",
+              "resolution"
+            ],
+            "properties": {
+              "summary": {
+                "$ref": "#/$defs/nonEmptyString"
+              },
+              "resolution": {
+                "$ref": "#/$defs/nonEmptyString"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Compile Reference Facets"
+  short_description: "Compile visual references into agent-ready packs"
+  default_prompt: "Use $compile-reference-facets to select exact visual-reference facets and compile a traceable interface plan."

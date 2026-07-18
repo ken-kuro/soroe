@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soroe.dev/schema/facet-pack.v1.schema.json",
+  "title": "Soroe Facet Pack v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "compiler",
+    "recipe",
+    "references",
+    "facets",
+    "composition",
+    "tokens",
+    "guardrails",
+    "graph",
+    "verification"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "soroe.pack/v1"
+    },
+    "compiler": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "const": "soroe"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "digest",
+        "project"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "soroe.recipe/v1"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "project": {
+          "type": "object"
+        }
+      }
+    },
+    "references": {
+      "type": "array"
+    },
+    "facets": {
+      "type": "array"
+    },
+    "composition": {
+      "type": "array"
+    },
+    "tokens": {
+      "type": "object"
+    },
+    "guardrails": {
+      "type": "array"
+    },
+    "graph": {
+      "type": "object",
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array"
+        },
+        "edges": {
+          "type": "array"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "soroe.verification/v1"
+        },
+        "checks": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

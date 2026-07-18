@@ -1,0 +1,97 @@
+{
+  "$schema": "https://soroe.dev/schema/recipe.v1.schema.json",
+  "schemaVersion": "soroe.recipe/v1",
+  "project": {
+    "id": "sample-interface",
+    "title": "Sample interface",
+    "intent": "Create a compact interface with an explicit source trail.",
+    "target": {
+      "kind": "web-interface",
+      "root": ".",
+      "framework": "framework-neutral"
+    }
+  },
+  "references": [
+    {
+      "id": "reference-a",
+      "title": "Reference A",
+      "url": "https://example.com/reference-a",
+      "role": "Information hierarchy",
+      "evidence": [
+        {
+          "id": "hero",
+          "locator": "/ at 1280px, first viewport",
+          "observation": "A short label precedes one dominant statement and one action."
+        }
+      ]
+    }
+  ],
+  "facets": [
+    {
+      "id": "hero.hierarchy",
+      "category": "layout",
+      "source": {
+        "referenceId": "reference-a",
+        "evidenceId": "hero"
+      },
+      "selection": {
+        "summary": "Label, statement, action hierarchy",
+        "properties": [
+          {
+            "name": "content-order",
+            "value": "label → statement → primary action"
+          }
+        ]
+      },
+      "adaptation": {
+        "intent": "Make the target's primary purpose legible in one scan.",
+        "directives": [
+          "Use target-owned copy.",
+          "Keep the action adjacent to the statement."
+        ]
+      },
+      "guardrails": {
+        "include": [
+          "Exactly one dominant statement."
+        ],
+        "exclude": [
+          "Reference wording, marks, and media."
+        ]
+      },
+      "implementation": {
+        "targets": [
+          "home.hero"
+        ],
+        "hints": [
+          "Use semantic heading and link elements."
+        ]
+      },
+      "verification": [
+        {
+          "id": "home.hero-order",
+          "method": "dom",
+          "subject": "main > header",
+          "expectation": "The label precedes the h1 and the primary action follows it."
+        }
+      ]
+    }
+  ],
+  "composition": [
+    {
+      "id": "home",
+      "route": "/",
+      "purpose": "Introduce the sample in one scan.",
+      "facets": [
+        "hero.hierarchy"
+      ]
+    }
+  ],
+  "tokens": {
+    "color-accent": "#7c5cff",
+    "space-card": "1.5rem"
+  },
+  "guardrails": [
+    "All copy and assets must belong to the target project.",
+    "Respect reduced-motion preferences."
+  ]
+}

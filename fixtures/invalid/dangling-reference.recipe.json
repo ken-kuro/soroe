@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "soroe.recipe/v1",
+  "project": {
+    "id": "broken-interface",
+    "title": "Broken interface",
+    "intent": "Exercise cross-reference diagnostics.",
+    "target": {
+      "kind": "web-interface",
+      "root": "."
+    }
+  },
+  "references": [
+    {
+      "id": "reference-a",
+      "title": "Reference A",
+      "url": "https://example.com/a",
+      "role": "Layout",
+      "evidence": [
+        {
+          "id": "home",
+          "locator": "/",
+          "observation": "A compact composition."
+        }
+      ]
+    }
+  ],
+  "facets": [
+    {
+      "id": "home.layout",
+      "category": "layout",
+      "source": {
+        "referenceId": "missing-reference",
+        "evidenceId": "home"
+      },
+      "selection": {
+        "summary": "Compact composition",
+        "properties": [
+          {
+            "name": "density",
+            "value": "compact"
+          }
+        ]
+      },
+      "adaptation": {
+        "intent": "Adapt compactness.",
+        "directives": [
+          "Use target copy."
+        ]
+      },
+      "guardrails": {
+        "include": [
+          "Compact grouping."
+        ],
+        "exclude": [
+          "Copied assets."
+        ]
+      },
+      "implementation": {
+        "targets": [
+          "home.grid"
+        ],
+        "hints": [
+          "Use CSS Grid."
+        ]
+      },
+      "verification": [
+        {
+          "id": "home.grid",
+          "method": "dom",
+          "subject": "main",
+          "expectation": "A grid exists."
+        }
+      ]
+    }
+  ],
+  "composition": [
+    {
+      "id": "home",
+      "route": "/",
+      "purpose": "Broken fixture.",
+      "facets": [
+        "home.layout"
+      ]
+    }
+  ],
+  "guardrails": [
+    "Do not copy source assets."
+  ]
+}
