@@ -117,6 +117,18 @@ See [`examples/observatory.recipe.json`](./examples/observatory.recipe.json) for
 }
 ```
 
+## For AI agents
+
+Soroe is built to be invoked by coding agents such as Claude and Codex. The agent can:
+
+1. Interview the user and call `soroe init` to scaffold a recipe.
+2. Replace placeholders with real evidence and facets.
+3. Run `soroe design` and `soroe build` to get implementation contracts.
+4. Implement from `IMPLEMENTATION_BRIEF.md` and `verification.plan.json`.
+5. Run `soroe verify` to check the result.
+
+See [`AGENTS.md`](./AGENTS.md), [`prompts/recipe-authoring.md`](./prompts/recipe-authoring.md), and [`examples/agent-workflow.md`](./examples/agent-workflow.md) for reusable prompts and workflow guidance.
+
 ## CLI reference
 
 ```bash
