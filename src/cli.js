@@ -9,6 +9,7 @@ import {
   writeOutputs,
 } from './compiler.js'
 import { BUILD_OUTPUT_FILES, DESIGN_OUTPUT_FILES, OUTPUT_FILES } from './constants.js'
+import { initRecipe, parseReferences } from './init.js'
 import { diagnostics, validateRecipe } from './validate.js'
 
 const USAGE = `Usage:
@@ -57,10 +58,10 @@ function parseInitArguments(rest) {
     } else if (value === '--references') {
       const raw = rest[index + 1]
       index += 1
-      for (const entry of raw.split(',')) {
-        const separator = entry.indexOf(':')
-        if (separator === -1) return { error: `Invalid reference '${entry}'. Use id:url.` }
-        references.push({ id: entry.slice(0, separator), url: entry.slice(separator + 1) })
+      try {
+        references.push(...parseReferences(raw))
+      } catch (cause) {
+        return { error: cause.message }
       }
     } else if (value === '--out') {
       out = rest[index + 1]
@@ -83,83 +84,14 @@ function parseInitArguments(rest) {
 }
 
 function generateRecipe({ id, title, references }) {
-  const referenceEntries = references.map((reference, index) => ({
-    id: reference.id,
-    title: `Reference ${index + 1}`,
-    url: reference.url,
-    role: 'Observed reference',
-    evidence: [
-      {
-        id: 'placeholder',
-        locator: 'Add route, viewport, and element you observed.',
-        observation: 'Replace with a factual observation about what you saw.',
-      },
-    ],
-  }))
-
-  const facetEntries = references.map((reference, index) => ({
-    id: `${reference.id}.placeholder`,
-    category: 'layout',
-    source: { referenceId: reference.id, evidenceId: 'placeholder' },
-    selection: {
-      summary: 'Replace with the exact property or pattern you want.',
-      properties: [{ name: 'example', value: 'Replace with a concrete, measurable property.' }],
-    },
-    adaptation: {
-      intent: 'Explain how this facet should be adapted for the target project.',
-      directives: ['Replace with implementation directives.'],
-    },
-    guardrails: {
-      include: ['State what must survive implementation.'],
-      exclude: ['State brands, assets, copy, or code that must not be copied.'],
-    },
-    implementation: {
-      targets: [`target.${index + 1}`],
-      hints: ['Map this facet to a logical implementation target.'],
-    },
-    verification: [
-      {
-        id: `${reference.id}.placeholder.check`,
-        method: 'manual',
-        subject: 'Replace with the element or surface to verify.',
-        expectation: 'Replace with an observable expectation.',
-      },
-    ],
-  }))
-
-  const compositionFacets = facetEntries.map((facet) => facet.id)
-
-  return {
-    $schema: 'https://soroe.dev/schema/recipe.v1.schema.json',
-    schemaVersion: 'soroe.recipe/v1',
-    project: {
-      id,
-      title,
-      intent: `A design system compiled from ${references.length} reference(s).`,
-      target: { kind: 'web-interface', root: '.', framework: 'static HTML, CSS, and JavaScript' },
-    },
-    references: referenceEntries,
-    facets: facetEntries,
-    composition: [
-      {
-        id: 'home',
-        route: '/',
-        purpose: 'Introduce the project and its primary surfaces.',
-        facets: compositionFacets,
-      },
-    ],
-    tokens: {
-      'color-accent': '#000000',
-      'color-canvas': '#ffffff',
-      'color-ink': '#000000',
-    },
-    guardrails: [
-      'All identity, copy, links, assets, and source code must belong to the target project.',
-      'Do not copy source prose, brands, code, models, textures, or media.',
-      'Keep core content and navigation usable without JavaScript.',
-      'Respect prefers-reduced-motion and visible keyboard focus.',
-    ],
-  }
+  return initRecipe({
+    id,
+    title,
+    references: references.map((reference, index) => ({
+      ...reference,
+      title: reference.title ?? `Reference ${index + 1}`,
+    })),
+  })
 }
 
 function parseDesignArguments(rest) {

@@ -12,13 +12,14 @@ Your job as the agent is to **author the recipe**. Soroe validates and compiles 
 
 ## Authoring the recipe
 
-1. Observe each reference at the route, viewport, and state relevant to the user's request.
-2. Record factual evidence: what you saw, where, and how it behaves.
-3. Select one facet per independent design decision.
-4. Declare adaptation, guardrails, and verification checks.
-5. Run `soroe validate <recipe.json>` until it passes.
-6. Run `soroe design <recipe.json> --out <dir>` to produce the design system.
-7. Run `soroe build <dir>/facet-pack.json --out <dir>` to produce the implementation contract.
+1. Interview the user about the target project and references.
+2. Capture references: URLs, pages, or described images.
+3. Optionally capture exact facets the user wants from each reference.
+4. Use `soroe init` to scaffold a starter recipe from the user's answers.
+5. Replace placeholders with real evidence and facets.
+6. Run `soroe validate <recipe.json>` until it passes.
+7. Run `soroe design <recipe.json> --out <dir>` to produce the design system.
+8. Run `soroe build <dir>/facet-pack.json --out <dir>` to produce the implementation contract.
 
 ## Use `soroe init` to scaffold a recipe
 
@@ -27,6 +28,13 @@ soroe init --id my-site --title "My Site" --references ref1:https://a.com,ref2:h
 ```
 
 This produces a valid starter recipe with one placeholder evidence and facet per reference. Replace the placeholders with real observations before compiling.
+
+You can also call `init` interactively:
+
+```bash
+soroe init --out ./recipe.json
+# then follow the prompts
+```
 
 ## Recipe schema
 
@@ -37,13 +45,24 @@ See [`schema/recipe.v1.schema.json`](./schema/recipe.v1.schema.json) and [`examp
 If your agent is written in JavaScript, you can call Soroe directly:
 
 ```javascript
-import { designRecipe, buildPack, validateRecipe } from 'soroe'
+import { designRecipe, buildPack, validateRecipe } from './src/compiler.js'
+import { initRecipe } from './src/init.js'
 
+// Scaffold a starter recipe
+const recipe = initRecipe({
+  id: 'my-site',
+  title: 'My Site',
+  references: [
+    { id: 'a', url: 'https://a.com' },
+  ],
+})
+
+// Validate, design, build
 const validation = validateRecipe(recipe)
 if (!validation.valid) throw new Error(validation.errors)
 
-const { pack, outputs: designOutputs } = designRecipe(recipe)
-const { outputs: buildOutputs } = buildPack(pack)
+const { pack } = designRecipe(recipe)
+const { outputs } = buildPack(pack)
 ```
 
 See [`examples/agent-workflow.md`](./examples/agent-workflow.md) for a full agent integration example.
