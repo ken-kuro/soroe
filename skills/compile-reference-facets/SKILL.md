@@ -56,8 +56,14 @@ Use composition decisions to explain which facet dominates and where. Do not sil
 Run the package-local CLI from the Soroe repository:
 
 ```bash
+# Validate recipe structure
 node ./bin/soroe.js validate /absolute/path/to/recipe.json
-node ./bin/soroe.js compile /absolute/path/to/recipe.json --out /absolute/path/to/output
+
+# Phase 1: compile design system
+node ./bin/soroe.js design /absolute/path/to/recipe.json --out /absolute/path/to/design
+
+# Phase 2: compile implementation contract
+node ./bin/soroe.js build /absolute/path/to/design/facet-pack.json --out /absolute/path/to/build
 ```
 
 When Soroe is installed, use `soroe` instead of the package-local Node path.
@@ -66,11 +72,12 @@ Stop on validation errors. Fix the recipe field identified by the diagnostic pat
 
 Consume these generated files:
 
-- `facet-pack.json` for machine-readable source of truth;
-- `IMPLEMENTATION_BRIEF.md` for coding work;
-- `REFERENCE_GRAPH.md` for review and provenance;
-- `verification.plan.json` for verification work;
-- `tokens.css` for declared target tokens.
+- `design/facet-pack.json` — machine-readable design system;
+- `design/REFERENCE_GRAPH.md` — reviewable provenance graph;
+- `design/DESIGN_BRIEF.md` — designer-facing rationale and constraints;
+- `design/tokens.css` — declared target tokens;
+- `build/IMPLEMENTATION_BRIEF.md` — coding instructions;
+- `build/verification.plan.json` — verification checks.
 
 ## Implement from the pack
 
@@ -89,9 +96,8 @@ Verify every check using its declared method. Inspect desktop and mobile states 
 After implementation, run:
 
 ```bash
-node ./bin/soroe.js compile /absolute/path/to/recipe.json \
-  --out /absolute/path/to/output \
-  --check
+node ./bin/soroe.js verify /absolute/path/to/site \
+  --plan /absolute/path/to/build/verification.plan.json
 ```
 
 Treat a stale pack as a failed verification. Recompile deliberately and review the graph/brief diff before continuing.
