@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="100%" stop-color="#12121a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b8ff6a"/>
+      <stop offset="100%" stop-color="#6a9eff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <g transform="translate(120, 220)">
+    <text x="0" y="0" fill="#ffffff" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="120" font-weight="700">Soroe</text>
+    <text x="0" y="70" fill="#b8ff6a" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="36" font-weight="500" letter-spacing="0.05em">DESIGN BY REFERENCE · BUILD WITH TRACEABILITY</text>
+    <rect x="0" y="120" width="640" height="6" fill="url(#accent)" rx="3"/>
+    <text x="0" y="180" fill="#a0a0b0" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="400">A design compiler for AI coding agents.</text>
+  </g>
+  <g transform="translate(880, 180)" opacity="0.9">
+    <rect x="0" y="0" width="320" height="48" rx="8" fill="#1a1a25" stroke="#2a2a35" stroke-width="2"/>
+    <text x="16" y="31" fill="#b8ff6a" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="16" font-weight="500">soroe init --id my-site</text>
+    <rect x="0" y="64" width="320" height="48" rx="8" fill="#1a1a25" stroke="#2a2a35" stroke-width="2"/>
+    <text x="16" y="95" fill="#6a9eff" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="16" font-weight="500">soroe design ./recipe.json</text>
+    <rect x="0" y="128" width="320" height="48" rx="8" fill="#1a1a25" stroke="#2a2a35" stroke-width="2"/>
+    <text x="16" y="159" fill="#ff6a9e" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="16" font-weight="500">soroe build ./facet-pack.json</text>
+    <rect x="0" y="192" width="320" height="48" rx="8" fill="#1a1a25" stroke="#2a2a35" stroke-width="2"/>
+    <text x="16" y="223" fill="#ffd36a" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="16" font-weight="500">soroe verify ./site</text>
+  </g>
+  <text x="640" y="680" text-anchor="middle" fill="#606070" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20">github.com/ken-kuro/soroe · MIT License</text>
+</svg>
