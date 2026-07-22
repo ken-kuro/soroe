@@ -1,7 +1,7 @@
 {
   "name": "soroe",
   "version": "0.1.0",
-  "description": "A design compiler: from visual references to a design system, then to an implementation contract an AI agent can build and verify.",
+  "description": "Skills-first agent framework: Design, Build, and Verify skills backed by an offline, deterministic reference-to-interface compiler.",
   "type": "module",
   "bin": {
     "soroe": "./bin/soroe.js"

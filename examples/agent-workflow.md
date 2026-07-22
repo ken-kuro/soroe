@@ -1,6 +1,6 @@
 # Agent workflow example
 
-This is how a coding agent (Claude, Codex, etc.) integrates Soroe to build a site from references.
+This is how a coding agent (Claude, Codex, etc.) uses Soroe's three skills — Design, Build, and Verify — to build a site from references.
 
 ## Conversation
 

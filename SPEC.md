@@ -6,14 +6,15 @@ Normative pack schema: `soroe.pack/v1`
 
 ## Product statement
 
-> Select exact facets from visual references, compile them into a design system, then compile that design system into an buildable interface an agent can trace and verify.
+> Skills for "make it like these." Compiler for keeping it traceable.
 
-Soroe separates reference-driven design from deterministic implementation. A human or agent observes source interfaces and writes a recipe. The compiler validates that every selection is grounded, composed, targeted, and verifiable, then emits stable design artifacts and implementation contracts.
+Soroe is a skills-first agent framework. It gives AI coding agents three focused skills — Design, Build, and Verify — backed by an offline, deterministic compiler. A human or agent observes source interfaces using whatever tools are available and writes a recipe. The compiler validates that every selection is grounded, composed, targeted, and verifiable, then emits stable design artifacts and implementation contracts. The skills teach agents how to observe, implement, and verify; the compiler keeps them honest.
 
 ## Users
 
 - designers handing several references to a coding agent;
-- developers who need an auditable alternative to “make it like these sites”;
+- developers who need an auditable alternative to "make it like these sites";
+- AI coding agents (Claude, Codex, Copilot, etc.) that load the Design, Build, and Verify skills to drive the full workflow;
 - coding-agent harnesses that need implementation constraints and verification checks in machine-readable form;
 - reviewers who need to trace a rendered decision back to its source evidence.
 
@@ -34,14 +35,14 @@ Emits:
 
 ### Phase 2: Soroe Build
 
-Input: the Facet Pack plus a frontend skill set.
+Input: the Facet Pack plus the coding agent's available frontend skills and target-repository context.
 Output: an implementation contract.
 
 Emits:
 
 - `IMPLEMENTATION_BRIEF.md` — route- and facet-oriented instructions;
 - `verification.plan.json` — flattened checks with source and target traceability;
-- optional scaffolded implementation targets inside the chosen skill set.
+- `target-map.json` with logical targets, contributing facets, hints, and agent-owned concrete mappings.
 
 ## Terms
 
@@ -66,26 +67,26 @@ Emits:
 
 ## Build-phase workflow
 
-1. Load the Facet Pack and the chosen skill set.
+1. Load the Facet Pack, target repository, and relevant frontend skills available to the agent.
 2. Map each implementation target to skill-specific conventions.
 3. Emit the implementation brief and verification plan.
 4. Implement from the brief.
 5. Execute DOM, computed-style, interaction, screenshot, and manual checks from the verification plan.
-6. Run `soroe verify` to confirm the built site satisfies the plan.
+6. Run `soroe verify --out <results.json>` to initialize the evidence record, then use the Verify skill to execute and reconcile every check.
 
 ## CLI
 
 ```text
 soroe design <recipe.json> --out <directory> [--check] [--format text|json]
-soroe build <facet-pack.json> --skill <skill-dir> --out <directory> [--format text|json]
-soroe verify <site-dir> --plan <verification.plan.json> [--format text|json]
+soroe build <facet-pack.json> --out <directory> [--format text|json]
+soroe verify <site-dir> --plan <verification.plan.json> [--out <results.json>] [--format text|json]
 
 # Legacy aliases for the implementation compiler
 soroe validate <recipe.json> [--format text|json]
 soroe compile <recipe.json> --out <directory> [--check] [--format text|json]
 ```
 
-`soroe compile` is the legacy single-phase alias that emits both design and build artifacts.
+`soroe compile` is a legacy alias of the design command. New integrations should use the explicit Design and Build phases.
 
 Exit codes:
 
@@ -203,6 +204,16 @@ Soroe receipts describe design decisions; they are not proof of copyright cleara
 - a downstream benchmark site is implemented from a compiled three-reference recipe;
 - dogfood-discovered reusable defects are fixed in Soroe before benchmark workarounds.
 
+## Agent Skills
+
+Soroe ships three focused Agent Skills that teach coding agents the full workflow:
+
+- **Design** (`skills/design/SKILL.md`) — observe references, author a recipe, compile a design system. Tool-agnostic: uses whatever browser or inspection tools the agent has.
+- **Build** (`skills/build/SKILL.md`) — implement from the Facet Pack using whatever frontend stack the target project uses. Maps logical implementation targets to concrete components, files, and selectors.
+- **Verify** (`skills/verify/SKILL.md`) — verify the built site against the verification plan using whatever testing tools are available. Reconciles external evidence honestly: a check that could not run is `blocked`, not `passed`.
+
+Each skill is self-contained and references the compiler CLI. Skills do not prescribe specific tools, frameworks, or browser automation libraries.
+
 ## Non-goals
 
-No browser crawler, screenshot capture service, asset downloader, code generator, component library, framework adapter, hosted registry, Figma plugin, similarity score, taste score, copyright oracle, or deployment system in the baseline release.
+No browser crawler, screenshot capture service, asset downloader, code generator, component library, framework adapter, hosted registry, Figma plugin, similarity score, taste score, copyright oracle, or deployment system in the baseline release. Soroe is not a browser automation product; the skills teach agents to use their own tools.

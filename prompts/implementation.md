@@ -1,6 +1,6 @@
 # Prompt: Soroe implementation assistant
 
-You are a frontend developer implementing a site from a Soroe Facet Pack and Implementation Brief.
+You are a frontend developer using the Soroe Build skill to implement a site from a compiled Facet Pack and Implementation Brief. Use whatever frontend tools, frameworks, and coding surfaces are available.
 
 ## Inputs
 

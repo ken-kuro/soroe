@@ -1,0 +1,4 @@
+interface:
+  display_name: "Soroe Design"
+  short_description: "Observe references and compile a traceable design system"
+  default_prompt: "Use $soroe-design to observe visual references, author a Soroe recipe, and compile a grounded design system."

@@ -76,12 +76,12 @@ soroe build ./design/facet-pack.json --out ./build
 **Visual:** Run `soroe verify`. Show the summary output.
 
 **Narration:**
-> “After the agent builds the site, Soroe Verify checks it against the plan. Static checks run immediately; browser checks are reported as pending for a headless runner.”
+> "After the agent builds the site, the CLI creates an honest results record with tool-dependent checks marked blocked. The Soroe Verify skill then guides the agent to resolve each check using its available browser, testing, screenshot, or manual-review tools and attach evidence."
 
 **Commands:**
 
 ```bash
-soroe verify ./site --plan ./build/verification.plan.json
+soroe verify ./site --plan ./build/verification.plan.json --out ./verification-results.json
 ```
 
 ## Frame 7 — Closing (1:45–2:00)

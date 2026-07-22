@@ -8,7 +8,7 @@ import {
   designRecipe,
   writeOutputs,
 } from './compiler.js'
-import { BUILD_OUTPUT_FILES, DESIGN_OUTPUT_FILES, OUTPUT_FILES } from './constants.js'
+import { BUILD_OUTPUT_FILES, DESIGN_OUTPUT_FILES, OUTPUT_FILES, RESULTS_SCHEMA_VERSION } from './constants.js'
 import { initRecipe, parseReferences } from './init.js'
 import { diagnostics, validateRecipe } from './validate.js'
 
@@ -16,18 +16,18 @@ const USAGE = `Usage:
   soroe init --id <project-id> --title <title> --references <id:url,...> --out <recipe.json>
   soroe design <recipe.json> --out <directory> [--check] [--format text|json]
   soroe build <facet-pack.json> --out <directory> [--format text|json]
-  soroe verify <site-dir> --plan <verification.plan.json> [--format text|json]
+  soroe verify <site-dir> --plan <verification.plan.json> [--out <results.json>] [--format text|json]
   soroe validate <recipe.json> [--format text|json]
   soroe compile <recipe.json> --out <directory> [--check] [--format text|json]
   soroe help`
 
-const HELP = `Soroe — design by reference, build with traceability.
+const HELP = `Soroe — skills for "make it like these," compiler for keeping it traceable.
 
 Commands:
   init     scaffold a starter recipe from references
-  design   compile a recipe into a design system
-  build    compile a Facet Pack into an implementation contract
-  verify   verify a built site against a verification plan
+  design   compile a recipe into a design system (Design skill)
+  build    compile a Facet Pack into an implementation contract (Build skill)
+  verify   verify a built site against a verification plan (Verify skill)
   validate validate a recipe against the schema
   compile  legacy alias that emits both design and build artifacts
   help     show this help message
@@ -129,16 +129,12 @@ function parseDesignArguments(rest) {
 function parseBuildArguments(rest) {
   let packPath
   let out
-  let skill
   let format = 'text'
 
   for (let index = 0; index < rest.length; index += 1) {
     const value = rest[index]
     if (value === '--out') {
       out = rest[index + 1]
-      index += 1
-    } else if (value === '--skill') {
-      skill = rest[index + 1]
       index += 1
     } else if (value === '--format') {
       format = rest[index + 1]
@@ -156,18 +152,22 @@ function parseBuildArguments(rest) {
   if (!out) return { error: '`build` requires `--out <directory>`.' }
   if (!['text', 'json'].includes(format)) return { error: "Format must be 'text' or 'json'." }
 
-  return { packPath, out, skill, format }
+  return { packPath, out, format }
 }
 
 function parseVerifyArguments(rest) {
   let siteDir
   let plan
+  let out
   let format = 'text'
 
   for (let index = 0; index < rest.length; index += 1) {
     const value = rest[index]
     if (value === '--plan') {
       plan = rest[index + 1]
+      index += 1
+    } else if (value === '--out') {
+      out = rest[index + 1]
       index += 1
     } else if (value === '--format') {
       format = rest[index + 1]
@@ -185,7 +185,7 @@ function parseVerifyArguments(rest) {
   if (!plan) return { error: '`verify` requires `--plan <verification.plan.json>`.' }
   if (!['text', 'json'].includes(format)) return { error: "Format must be 'text' or 'json'." }
 
-  return { siteDir, plan, format }
+  return { siteDir, plan, out, format }
 }
 
 function printDiagnostics(result, format, streams) {
@@ -325,39 +325,42 @@ async function runVerify(options, streams) {
     return 2
   }
 
-  // Baseline verify command runs static checks from the plan and reports
-  // which checks require a browser or manual review. A full headless runner
-  // can be plugged in later without changing the CLI contract.
   const results = []
   for (const check of plan.checks ?? []) {
     if (['dom', 'computed-style', 'interaction', 'screenshot'].includes(check.method)) {
-      results.push({ id: check.id, status: 'pending', reason: 'requires browser runner' })
+      results.push({ id: check.id, status: 'blocked', reason: 'requires browser runner' })
     } else if (check.method === 'manual') {
-      results.push({ id: check.id, status: 'pending', reason: 'requires manual review' })
+      results.push({ id: check.id, status: 'blocked', reason: 'requires manual review' })
     } else {
-      results.push({ id: check.id, status: 'unknown', reason: 'unknown method' })
+      results.push({ id: check.id, status: 'blocked', reason: `unknown method '${check.method}'` })
     }
   }
 
   const passed = results.filter((item) => item.status === 'passed').length
-  const pending = results.filter((item) => item.status === 'pending').length
   const failed = results.filter((item) => item.status === 'failed').length
+  const blocked = results.filter((item) => item.status === 'blocked').length
 
   const payload = {
-    schemaVersion: 'soroe.verify/v1',
+    schemaVersion: RESULTS_SCHEMA_VERSION,
     siteDir: options.siteDir,
     plan: options.plan,
-    summary: { passed, pending, failed, total: results.length },
+    summary: { passed, failed, blocked, total: results.length },
     results,
+  }
+
+  if (options.out) {
+    await writeFile(options.out, canonicalJson(payload), 'utf8')
   }
 
   if (options.format === 'json') {
     streams.stdout.write(canonicalJson(payload))
   } else {
     streams.stdout.write(
-      `Verification: ${passed} passed, ${pending} pending, ${failed} failed (${results.length} total).\n`,
+      `Verification: ${passed} passed, ${failed} failed, ${blocked} blocked (${results.length} total).\n`,
     )
-    streams.stdout.write('Run a browser-based verifier to resolve pending checks.\n')
+    if (blocked > 0) {
+      streams.stdout.write('Use the Verify skill to resolve blocked checks with available tools.\n')
+    }
   }
 
   return 0

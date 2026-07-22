@@ -7,7 +7,7 @@ import test from 'node:test'
 import { canonicalJson } from '../src/canonical.js'
 import { buildPack, checkOutputs, compileRecipe, designRecipe, writeOutputs } from '../src/compiler.js'
 import { run } from '../src/cli.js'
-import { DESIGN_OUTPUT_FILES, OUTPUT_FILES } from '../src/constants.js'
+import { BUILD_OUTPUT_FILES, DESIGN_OUTPUT_FILES, OUTPUT_FILES } from '../src/constants.js'
 import { validateRecipe } from '../src/validate.js'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -207,4 +207,95 @@ test('CLI design and build commands run end to end', async () => {
   assert.equal(code2, 0)
   const plan = JSON.parse(await readFile(join(buildDir, 'verification.plan.json'), 'utf8'))
   assert.equal(plan.schemaVersion, 'soroe.verification/v1')
+})
+
+test('build phase emits target-map.json with logical targets', async () => {
+  const recipe = await readJson('fixtures/valid/minimal.recipe.json')
+  const { pack } = compileRecipe(recipe)
+  const { outputs } = buildPack(pack)
+  assert.ok(outputs['target-map.json'], 'target-map.json must be emitted')
+  const targetMap = JSON.parse(outputs['target-map.json'])
+  assert.equal(targetMap.schemaVersion, 'soroe.target-map/v1')
+  assert.ok(Array.isArray(targetMap.targets))
+  assert.ok(targetMap.targets.length > 0)
+  for (const target of targetMap.targets) {
+    assert.ok(target.id, 'target must have an id')
+    assert.ok(Array.isArray(target.facets), 'target must have facets array')
+    assert.ok(target.facets.length > 0, 'target must reference at least one facet')
+    assert.equal(target.mapping, null, 'mapping starts null for the agent to fill in')
+  }
+})
+
+test('build output files include target-map.json', async () => {
+  assert.ok(BUILD_OUTPUT_FILES.includes('target-map.json'))
+})
+
+test('CLI build with missing pack path exits 2', async () => {
+  const io = streams()
+  const code = await run(['build', '/nonexistent/facet-pack.json', '--out', '/tmp/soroe-test-out'], io)
+  assert.equal(code, 2)
+  const output = io.read()
+  assert.match(output.stderr, /Could not load Facet Pack/)
+})
+
+test('CLI verify with missing plan path exits 2', async () => {
+  const io = streams()
+  const code = await run(['verify', '/tmp/some-site', '--plan', '/nonexistent/verification.plan.json'], io)
+  assert.equal(code, 2)
+  const output = io.read()
+  assert.match(output.stderr, /Could not load verification plan/)
+})
+
+test('CLI design with missing recipe path exits 1', async () => {
+  const io = streams()
+  const code = await run(['design', '/nonexistent/recipe.json', '--out', '/tmp/soroe-test-out'], io)
+  assert.equal(code, 1)
+  const output = io.read()
+  assert.match(output.stderr, /input\.unreadable/)
+})
+
+test('CLI build rejects --skill as unknown option', async () => {
+  const io = streams()
+  const code = await run(['build', 'pack.json', '--out', '/tmp/out', '--skill', 'react'], io)
+  assert.equal(code, 2)
+  const output = io.read()
+  assert.match(output.stderr, /Unknown option '--skill'/)
+})
+
+test('verify uses blocked status, not pending', async () => {
+  const recipe = await readJson('fixtures/valid/minimal.recipe.json')
+  const { pack } = compileRecipe(recipe)
+  const { outputs } = buildPack(pack)
+  const planPath = join(tmpRoot, 'verify-plan.json')
+  await writeFile(planPath, outputs['verification.plan.json'], 'utf8')
+
+  const io = streams()
+  const code = await run(['verify', tmpRoot, '--plan', planPath, '--format', 'json'], io)
+  assert.equal(code, 0)
+  const payload = JSON.parse(io.read().stdout)
+  assert.equal(payload.schemaVersion, 'soroe.results/v1')
+  assert.ok(payload.summary.blocked >= 0)
+  assert.equal(payload.summary.pending, undefined, 'pending must not appear in summary')
+  for (const result of payload.results) {
+    assert.ok(
+      ['passed', 'failed', 'blocked', 'manual'].includes(result.status),
+      `status must be passed/failed/blocked/manual, got '${result.status}'`,
+    )
+  }
+})
+
+test('verify --out writes results file', async () => {
+  const recipe = await readJson('fixtures/valid/minimal.recipe.json')
+  const { pack } = compileRecipe(recipe)
+  const { outputs } = buildPack(pack)
+  const planPath = join(tmpRoot, 'verify-plan-out.json')
+  const resultsPath = join(tmpRoot, 'verify-results.json')
+  await writeFile(planPath, outputs['verification.plan.json'], 'utf8')
+
+  const io = streams()
+  const code = await run(['verify', tmpRoot, '--plan', planPath, '--out', resultsPath], io)
+  assert.equal(code, 0)
+  const written = JSON.parse(await readFile(resultsPath, 'utf8'))
+  assert.equal(written.schemaVersion, 'soroe.results/v1')
+  assert.ok(Array.isArray(written.results))
 })

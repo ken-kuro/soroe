@@ -1,0 +1,4 @@
+interface:
+  display_name: "Soroe Verify"
+  short_description: "Verify a built site against its design contract"
+  default_prompt: "Use $soroe-verify to check a built site against its Soroe verification plan and report honestly."

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release of Soroe, a two-phase design compiler.
 - `soroe design` — compile a recipe into a design system (Facet Pack, Reference Graph, Design Brief, tokens).
 - `soroe build` — compile a Facet Pack into an implementation contract (Implementation Brief, Verification Plan).
-- `soroe verify` — run static verification checks against a built site.
+- `soroe verify` — initialize a structured verification-results record for the Verify skill to resolve with available tools.
 - `soroe validate` and legacy `soroe compile` aliases.
 - JSON Schema and runtime validators for `soroe.recipe/v1` and `soroe.pack/v1`.
 - Deterministic, byte-identical output with SHA-256 recipe digest.

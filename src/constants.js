@@ -4,6 +4,8 @@ export const RECIPE_SCHEMA_VERSION = 'soroe.recipe/v1'
 export const PACK_SCHEMA_VERSION = 'soroe.pack/v1'
 export const DIAGNOSTICS_SCHEMA_VERSION = 'soroe.diagnostics/v1'
 export const VERIFICATION_SCHEMA_VERSION = 'soroe.verification/v1'
+export const RESULTS_SCHEMA_VERSION = 'soroe.results/v1'
+export const TARGET_MAP_SCHEMA_VERSION = 'soroe.target-map/v1'
 
 export const DESIGN_OUTPUT_FILES = [
   'facet-pack.json',
@@ -12,7 +14,7 @@ export const DESIGN_OUTPUT_FILES = [
   'tokens.css',
 ]
 
-export const BUILD_OUTPUT_FILES = ['IMPLEMENTATION_BRIEF.md', 'verification.plan.json']
+export const BUILD_OUTPUT_FILES = ['IMPLEMENTATION_BRIEF.md', 'verification.plan.json', 'target-map.json']
 
 // Legacy alias for the single-phase compiler.
 export const OUTPUT_FILES = [...DESIGN_OUTPUT_FILES, ...BUILD_OUTPUT_FILES]

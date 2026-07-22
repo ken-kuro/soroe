@@ -10,6 +10,7 @@ import {
   OUTPUT_FILES,
   PACK_SCHEMA_VERSION,
   VERIFICATION_SCHEMA_VERSION,
+  TARGET_MAP_SCHEMA_VERSION,
 } from './constants.js'
 
 function compareNodes(left, right) {
@@ -331,6 +332,7 @@ export function compileRecipe(recipe) {
     'DESIGN_BRIEF.md': renderDesignBrief(pack),
     'IMPLEMENTATION_BRIEF.md': renderImplementationBrief(pack),
     'verification.plan.json': canonicalJson(verification),
+    'target-map.json': canonicalJson(buildTargetMap(pack)),
     'tokens.css': renderTokens(normalized.tokens),
   }
 
@@ -346,10 +348,43 @@ export function designRecipe(recipe) {
   return { pack, outputs: designOutputs }
 }
 
+function buildTargetMap(pack) {
+  const targetFacets = new Map()
+  const targetHints = new Map()
+
+  for (const facet of pack.facets ?? []) {
+    for (const target of facet.implementation?.targets ?? []) {
+      const current = targetFacets.get(target) ?? []
+      current.push(facet.id)
+      targetFacets.set(target, current)
+
+      const hints = targetHints.get(target) ?? []
+      for (const hint of facet.implementation?.hints ?? []) {
+        if (!hints.includes(hint)) hints.push(hint)
+      }
+      targetHints.set(target, hints)
+    }
+  }
+
+  const targets = [...targetFacets.keys()].sort().map((id) => ({
+    id,
+    facets: [...targetFacets.get(id)].sort(),
+    hints: targetHints.get(id) ?? [],
+    mapping: null,
+  }))
+
+  return {
+    schemaVersion: TARGET_MAP_SCHEMA_VERSION,
+    projectId: pack.recipe?.project?.id ?? null,
+    targets,
+  }
+}
+
 export function buildPack(pack) {
   const outputs = {
     'IMPLEMENTATION_BRIEF.md': renderImplementationBrief(pack),
     'verification.plan.json': canonicalJson(pack.verification ?? { schemaVersion: VERIFICATION_SCHEMA_VERSION, checks: [] }),
+    'target-map.json': canonicalJson(buildTargetMap(pack)),
   }
   return { pack, outputs }
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Soroe Build"
+  short_description: "Implement a site from a compiled Facet Pack"
+  default_prompt: "Use $soroe-build to implement a traceable interface from a compiled Soroe Facet Pack using the project's frontend stack."

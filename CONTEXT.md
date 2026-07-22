@@ -2,12 +2,13 @@
 
 ## Product
 
-Soroe is a two-phase design compiler for turning visual references into buildable, traceable web interfaces.
+Soroe is a skills-first agent framework for turning visual references into buildable, traceable web interfaces. It gives AI coding agents three focused skills — Design, Build, and Verify — backed by an offline, deterministic compiler.
 
-1. **Soroe Design** — the viral, designer-facing phase. Feed it references, evidence, and facets; get a structured design system (Facet Pack, Reference Graph, design brief, tokens, and asset manifest). This is the “Claude Design, but grounded in references” moment.
-2. **Soroe Build** — the agent-facing phase. Feed the design system plus a frontend skill set; get implementation targets and a verification plan that a coding agent can execute against.
+1. **Soroe Design** (skill + compiler phase) — observe references using whatever browser or inspection tools are available, author a recipe of evidence and facets, compile a structured design system (Facet Pack, Reference Graph, design brief, tokens). Tool-agnostic: the skill teaches the agent how to observe, not which browser to use.
+2. **Soroe Build** (skill + compiler phase) — implement from the compiled Facet Pack using whatever frontend stack the target project uses. The skill makes the frontend-skill handoff real by mapping logical implementation targets to concrete components, files, and selectors.
+3. **Soroe Verify** (skill + CLI) — verify the built site against the verification plan using whatever testing tools are available. The skill reconciles external evidence honestly: a check that could not run is `blocked`, not `passed`.
 
-The current codebase implements the compiler skeleton and the build-phase outputs. The next priority is making the design phase feel as tangible and shareable as the idea deserves.
+The compiler is the deterministic core. The skills are how agents actually use it.
 
 ## Selection
 
@@ -22,16 +23,23 @@ Soroe owns:
 - a versioned recipe schema;
 - deterministic recipe validation and diagnostics;
 - compilation into a Facet Pack, Reference Graph, design brief, implementation brief, verification plan, and optional CSS tokens;
-- an Agent Skill for observing references, authoring recipes, implementing the compiled pack, and verifying the result;
+- three focused Agent Skills (Design, Build, Verify) that teach agents the workflow using whatever tools they have;
 - neutral fixtures, tests, and documentation.
 
 Soroe does not own:
 
-- browser scraping or screenshot capture (input is human/agent-authored evidence);
+- browser automation, scraping, or screenshot capture (the skills teach agents to use their own tools);
 - model calls or subjective similarity scoring;
 - copied reference assets, source code, or personal content;
-- framework-specific components;
+- framework-specific components (the Build skill maps to whatever stack the target uses);
 - deployment or a hosted design-reference library.
+
+## Contracts
+
+The compiler emits deterministic artifacts that the skills consume:
+
+- **`target-map.json`** (`soroe.target-map/v1`) — logical implementation targets with facet associations and structural hints. The `mapping` field starts as `null`; the Build skill instructs the agent to fill it with the concrete file, component, and selector.
+- **`verification-results.json`** (`soroe.results/v1`) — written by `soroe verify --out`. Each check has a status: `passed`, `failed`, `blocked`, or `manual`. The Verify skill instructs the agent to resolve blocked checks and update the file with evidence.
 
 ## Reference ethics
 
